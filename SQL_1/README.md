@@ -8,9 +8,6 @@ It shows the same login check twice:
 | `POST /login` | String-concatenated SQL | Intentionally exploitable |
 | `POST /login/fixed` | Parameterized SQL (`?` placeholders) | Treats payloads as data |
 
-> **Warning:** This app is intentionally insecure. Run it on localhost only for
-> authorised coursework. Never deploy it or expose it to a network.
-
 ## Run it
 
 ```bash
@@ -71,7 +68,7 @@ SELECT id, username, password FROM users WHERE username='admin' --' AND password
 
 The query selects the admin row and never evaluates the password condition.
 
-## Suggested live demo
+## Live demo
 
 1. Open <http://127.0.0.1:5000/login> and show that both panels start empty.
 2. Log in normally with `admin` / `admin123` to establish the expected flow.
@@ -104,6 +101,13 @@ SELECT id, username, password FROM users WHERE username = ? AND password = ?
 SQLite then binds the submitted strings to the placeholders as values. Quotes,
 `--`, `OR`, and other SQL syntax in the input are treated as literal characters,
 so the injected payload simply fails to match a real username.
+
+## Other Mitigations
+
+### Input Validation with Allow-Lists
+Another common defense against SQL injection is **input validation using allow-lists**.  An allow-list defines exactly what valid input looks like, for example, restricting a username field to alphanumeric characters only, with a fixed maximum length, and rejecting anything that doesn't match this pattern before it ever reaches the database query.
+
+This works because SQL injection payloads rely on special characters (`'`, `--`, `;` etc.) to break out of the intended query structure.
 
 ## Files
 
