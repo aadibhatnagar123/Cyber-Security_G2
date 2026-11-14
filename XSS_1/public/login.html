@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sign In - GameStore</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">🛒 GameStore</a>
+  </header>
+  <main style="max-width: 400px; margin: 4rem auto;">
+    <h2>Sign In</h2>
+    <div class="profile-box">
+      <form id="login-form">
+        <input type="email" id="username" placeholder="Email (john.doe@example.com)" required>
+        <input type="password" id="password" placeholder="Password (password123)" required>
+        <button type="submit" style="width: 100%; margin-top: 10px;">Sign In</button>
+        <p id="error-msg" style="color: #f66; display: none; margin-top: 10px;"></p>
+      </form>
+    </div>
+  </main>
+  <script>
+    document.getElementById("login-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "username=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password)
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        // Save "session" in local storage and redirect
+        localStorage.setItem("loggedIn", "true");
+        window.location.href = "/profile.html";
+      } else {
+        const err = document.getElementById("error-msg");
+        err.textContent = data.error;
+        err.style.display = "block";
+      }
+    };
+  </script>
+</body>
+</html>
