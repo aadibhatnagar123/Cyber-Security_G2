@@ -1,0 +1,28 @@
+# ---- Node ----
+node_modules/
+npm-debug.log*
+yarn-error.log
+*.log
+
+# ---- Environment / secrets ----
+.env
+.env.*
+*.local
+
+# ---- OS cruft ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Editors / IDEs ----
+.vscode/
+.idea/
+*.swp
+*~
+
+# ---- Unused Flask leftovers from an earlier attempt (not part of this Node demo) ----
+app.py
+templates/
+
+# ---- Local tooling (hardcoded repo/proxy; not for the shared repo) ----
+push-to-github.bat

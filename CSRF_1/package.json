@@ -1,0 +1,11 @@
+{
+  "name": "csrf-get-demo",
+  "version": "1.0.0",
+  "description": "Educational demo of GET-based CSRF (forged action) with a synchronizer-token mitigation. For IIIT Allahabad Cyber Security (IT-30001) assignment. Zero dependencies.",
+  "main": "app/server.js",
+  "scripts": {
+    "start": "node app/server.js",
+    "start:secure": "SECURE=1 node app/server.js",
+    "attacker": "node attacker/attacker-server.js"
+  }
+}

